@@ -12,9 +12,24 @@ from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 from datetime import datetime
 
-import backend.config as config
-from backend.database import get_connection
-from backend.services.ingestion import SyncOrchestrator, DataIngestionService
+try:
+    import backend.config as config
+    from backend.database import get_connection
+except ModuleNotFoundError:
+    try:
+        import config as config
+        from database import get_connection
+    except:
+        config = None
+        get_connection = None
+try:
+    from backend.services.ingestion import SyncOrchestrator, DataIngestionService
+except ModuleNotFoundError:
+    try:
+        from services.ingestion import SyncOrchestrator, DataIngestionService
+    except:
+        SyncOrchestrator = None
+        DataIngestionService = None
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Dashboard"])
 
