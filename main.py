@@ -113,8 +113,19 @@ def health_check():
     }
 
 # Mount static frontend directories
-app.mount("/css", StaticFiles(directory=str(BASE_DIR / "css")), name="css")
-app.mount("/js", StaticFiles(directory=str(BASE_DIR / "js")), name="js")
+# Fix for Render - only mount if folder exists
+css_path = BASE_DIR / "css"
+if css_path.exists():
+    app.mount("/css", StaticFiles(directory=str(css_path)), name="css")
+
+js_path = BASE_DIR / "js"
+if js_path.exists():
+    app.mount("/js", StaticFiles(directory=str(js_path)), name="js")
+
+images_path = BASE_DIR / "images"
+if images_path.exists():
+    app.mount("/images", StaticFiles(directory=str(images_path)), name="images")
+
 
 @app.get("/bundle.js")
 def serve_bundle_js():
