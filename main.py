@@ -29,7 +29,16 @@ try:
 except ModuleNotFoundError:
     from config import HOST, PORT, BASE_DIR
     from database import init_db
-    from routers import markets, prices, recommendations, voice, admin, auth, bookings
+    try:
+        from routers import markets, prices, recommendations, voice, admin, auth, bookings
+    except ModuleNotFoundError:
+        import admin
+        import auth
+        import prices
+        import voice
+        markets = None
+        recommendations = None
+        bookings = None
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import logging
@@ -67,13 +76,26 @@ app.add_middleware(
 )
 
 # Register REST Routers under /api
-app.include_router(recommendations.router)
-app.include_router(markets.router)
-app.include_router(prices.router)
-app.include_router(voice.router)
-app.include_router(admin.router)
-app.include_router(auth.router)
-app.include_router(bookings.router)
+if recommendations is not None:
+    app.include_router(recommendations.router)
+if markets is not None:
+    app.include_router(markets.router)
+if prices is not None:
+    app.include_router(prices.router)
+if voice is not None:
+    app.include_router(voice.router)
+if admin is not None:
+    app.include_router(admin.router)
+try:
+    app.include_router(auth.router)
+except:
+    pass
+try:
+    import bookings
+    app.include_router(bookings.router)
+except:
+    pass
+ 
 
 @app.on_event("startup")
 def on_startup():
