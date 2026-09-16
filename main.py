@@ -166,11 +166,29 @@ def serve_assets(path: str):
 @app.get("/home")
 @app.get("/index.html")
 @app.get("/")
+@app.get("/bolt")
+@app.get("/home")
+@app.get("/index.html")
+@app.get("/")
 def serve_index():
-    path = get_file_path("index.html")
-    if not path:
-        return {"status": "live", "message": "API is running. Frontend index.html not found, build it. See /docs for API"}
-    return FileResponse(path)
+    import os
+    print(f"DEBUG CWD={os.getcwd()} files={os.listdir('.')}")
+    print(f"DEBUG _CURRENT_DIR={_CURRENT_DIR} files={list(_CURRENT_DIR.glob('*'))[:20]}")
+    
+    # Try every possible location
+    possible = [
+        _CURRENT_DIR / "index.html",
+        Path.cwd() / "index.html",
+        Path("index.html"),
+        _CURRENT_DIR / "frontend" / "index.html",
+    ]
+    for p in possible:
+        print(f"Checking {p} exists={p.exists()}")
+        if p.exists():
+            print(f"SERVING {p}")
+            return FileResponse(str(p))
+            
+    return {"status": "live", "message": f"API is running but index.html not found. I see these files in CWD: {os.listdir('.')}"}
 
 if __name__ == "__main__":
     import uvicorn
