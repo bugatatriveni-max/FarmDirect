@@ -5,16 +5,38 @@ POST /api/voice/reset-session — Reset voice session context
 GET /api/voice/status — Check Voice AI engine status and supported languages
 """
 from fastapi import APIRouter
-from backend.models import (
-    VoiceQueryRequest, VoiceQueryResponse,
-    VoiceSessionResetRequest, VoiceStatusResponse
-)
-from backend.services.voice_ai import VoiceAIService
-from backend.config import (
-    DEFAULT_VOICE_LANGUAGE, OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY
-)
-from backend.database import get_connection
+try:
+    from backend.models import (
+        VoiceQueryRequest, VoiceQueryResponse,
+        VoiceSessionResetRequest, VoiceStatusResponse
+    )
+except ModuleNotFoundError:
+    from models import (
+        VoiceQueryRequest, VoiceQueryResponse,
+        VoiceSessionResetRequest, VoiceStatusResponse
+    )
 
+try:
+    from backend.services.voice_ai import VoiceAIService
+except ModuleNotFoundError:
+    try:
+        from services.voice_ai import VoiceAIService
+    except:
+        VoiceAIService = None
+
+try:
+    from backend.config import (
+        DEFAULT_VOICE_LANGUAGE, OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY
+    )
+except ModuleNotFoundError:
+    from config import (
+        DEFAULT_VOICE_LANGUAGE, OPENAI_API_KEY, GEMINI_API_KEY, GROQ_API_KEY
+    )
+
+try:
+    from backend.database import get_connection
+except ModuleNotFoundError:
+    from database import get_connection
 router = APIRouter(prefix="/api/voice", tags=["Voice AI"])
 
 @router.post("/query", response_model=VoiceQueryResponse)
