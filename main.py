@@ -126,32 +126,54 @@ images_path = BASE_DIR / "images"
 if images_path.exists():
     app.mount("/images", StaticFiles(directory=str(images_path)), name="images")
 
+def get_file_path(filename: str):
+    # Check in current dir and frontend dir
+    p1 = BASE_DIR / filename
+    p2 = BASE_DIR / "frontend" / filename
+    p3 = BASE_DIR / "dist" / filename
+    if p1.exists():
+        return str(p1)
+    if p2.exists():
+        return str(p2)
+    if p3.exists():
+        return str(p3)
+    return None
 
 @app.get("/bundle.js")
 def serve_bundle_js():
-    return FileResponse(str(BASE_DIR / "bundle.js"), media_type="application/javascript")
+    path = get_file_path("bundle.js")
+    if not path:
+        return {"status": "error", "message": "bundle.js not built yet"}
+    return FileResponse(path, media_type="application/javascript")
 
 @app.get("/bundle.css")
 def serve_bundle_css():
-    return FileResponse(str(BASE_DIR / "bundle.css"), media_type="text/css")
+    path = get_file_path("bundle.css")
+    if not path:
+        return {"status": "error", "message": "bundle.css not built yet"}
+    return FileResponse(path, media_type="text/css")
 
 @app.get("/assets/{path:path}")
 def serve_assets(path: str):
-    if path.endswith(".js"):
-        return FileResponse(str(BASE_DIR / "bundle.js"), media_type="application/javascript")
+    full_path = get_file_path("bundle.js")
     if path.endswith(".css"):
-        return FileResponse(str(BASE_DIR / "bundle.css"), media_type="text/css")
-    return FileResponse(str(BASE_DIR / "bundle.js"))
+        full_path = get_file_path("bundle.css")
+    if not full_path:
+        return {"status": "error", "message": "assets not built"}
+    return FileResponse(full_path)
 
 @app.get("/bolt")
 @app.get("/home")
 @app.get("/index.html")
 @app.get("/")
 def serve_index():
-    return FileResponse(str(BASE_DIR / "index.html"))
+    path = get_file_path("index.html")
+    if not path:
+        return {"status": "live", "message": "API is running. Frontend index.html not found, build it. See /docs for API"}
+    return FileResponse(path)
 
 if __name__ == "__main__":
     import uvicorn
     is_dev = os.getenv("ENV", "production").lower() == "development"
-    uvicorn.run("backend.main:app", host=HOST, port=PORT, reload=is_dev)
+    uvicorn.run("main:app", host=HOST, port=PORT, reload=is_dev)
 
