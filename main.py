@@ -154,7 +154,35 @@ def serve_bundle_css():
     return FileResponse(path, media_type="text/css")
 
 @app.get("/assets/{path:path}")
-def serve_assets(path: str):
+@app.get("/css/{path:path}")
+@app.get("/js/{path:path}")
+@app.get("/bundle.js")
+@app.get("/bundle.css")
+def serve_assets(path: str = ""):
+    # If requesting bundle files directly
+    if path == "" or path == "bundle.js" or "bundle.js" in str(path):
+        p = _CURRENT_DIR / "bundle.js"
+        if p.exists():
+            return FileResponse(str(p))
+    if path == "" or path == "bundle.css" or "bundle.css" in str(path) or "styles.css" in path:
+        # Try bundle.css as fallback for styles.css
+        for cand in [_CURRENT_DIR / "bundle.css", _CURRENT_DIR / "css" / "styles.css", _CURRENT_DIR / "styles.css"]:
+            if cand.exists():
+                return FileResponse(str(cand))
+    
+    # Try to find any requested file in root or subfolders
+    possible = [
+        _CURRENT_DIR / path,
+        _CURRENT_DIR / "css" / path,
+        _CURRENT_DIR / "js" / path,
+        _CURRENT_DIR / path.split("/")[-1],  # just filename
+    ]
+    for p in possible:
+        if p.exists():
+            return FileResponse(str(p))
+            
+    print(f"Asset not found: {path}, tried {possible}")
+    return {"status": "error", "message": f"asset {path} not found"}
     full_path = get_file_path("bundle.js")
     if path.endswith(".css"):
         full_path = get_file_path("bundle.css")
